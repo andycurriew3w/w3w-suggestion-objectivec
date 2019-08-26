@@ -1,9 +1,8 @@
 //
 //  W3wTextField.m
-//  W3wSuggestionField
 //
-//  Created by Lshiva on 25/08/2019.
-//  Copyright © 2019 what3words. All rights reserved.
+//
+//  Created by Lshiva on 28/06/2019.
 //
 
 #import "W3wTextField.h"
@@ -34,6 +33,7 @@ static int const margin = 15.0f;
 @property (nonatomic, strong) UIViewController* parentViewController; // parent view controller
 @property (nonatomic, strong) W3wGeocoder *instance; //what3words geocoder
 @property (nonatomic, strong) NSMutableArray *dataArray; // W3w Suggestion array
+@property (nonatomic, strong) UIView *checkMarkView; // W3w Suggestion array
 
 @end
 
@@ -100,31 +100,30 @@ static int const margin = 15.0f;
     self.leftView = [self texthandler];
     self.leftViewMode = UITextFieldViewModeAlways;
     /* se up checkmark view */
-    self.rightView = [self checkMarkView];
-    self.rightViewMode = UITextFieldViewModeAlways;
-    //TODO: set up keyboard height
-}
-
--(UIView *)checkMarkView {
     UIImageView *rightViewImage = [[UIImageView alloc]initWithFrame:CGRectMake(-10, 0, 23, 23)];
     NSBundle *bundle = [NSBundle bundleForClass:[W3wTextField class]];
     UIImage *rightImage = [UIImage imageNamed:@"checkmark" inBundle:bundle compatibleWithTraitCollection:nil];
     rightViewImage.image = rightImage;
-    UIView *iconContainerView = [[UIView alloc]initWithFrame:CGRectMake(0, self.frame.size.height /2, 30, 30)];
-    [iconContainerView addSubview:rightViewImage];
-    iconContainerView.hidden = YES;
-    return  iconContainerView;
+    self.checkMarkView = [[UIView alloc]initWithFrame:CGRectMake(0, self.frame.size.height /2, 30, 30)];
+    [self.checkMarkView addSubview:rightViewImage];
+    [self.checkMarkView setHidden:YES];
+    self.rightView = self.checkMarkView;
+    self.rightViewMode = UITextFieldViewModeAlways;
+    //TODO: set up keyboard height
+}
+
+-(UIView *)checkMarkIconView {
+    return  _checkMarkView;
 }
 
 - (UILabel *)texthandler {
     UILabel * textHandler = [[UILabel alloc]initWithFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, 23, self.frame.size.height)];
-    textHandler.text = @"///";
+    textHandler.text = @"/// ";
     textHandler.textColor = [UIColor colorWithRed:206.0/255.0 green:55.0/255.0 blue:50/255.0 alpha:1.0];
     textHandler.contentMode = UIViewContentModeScaleAspectFit;
     textHandler.font = [UIFont fontWithName:textHandler.font.fontName size:23];
     return textHandler;
 }
-
 
 - (UIViewController *)viewController {
     UIResponder *responder = self;
@@ -186,7 +185,7 @@ static int const margin = 15.0f;
 - (void) showList {
     if (self.parentController == nil) {
         self.parentController = [self viewController];
-        if (self.parentController != nil) {
+        if (self.parentController == nil) {
             self.backgroundView.frame =  self.parentController.view.frame;
         } else {
             self.backgroundView.frame = self.backgroundView.frame;
@@ -212,8 +211,7 @@ static int const margin = 15.0f;
     [self.parentController.view addSubview:self.table];
     [self.table registerClass:[SuggestionTableViewCell class] forCellReuseIdentifier:cellIdentifier];
     
-    self.selected = true;
-    
+    self.selected = YES;
     double y = pointToParent.y + self.frame.size.height + 5;
     
     [UIView animateWithDuration:0.9 delay:0 usingSpringWithDamping:0.4 initialSpringVelocity:0.1 options:UIViewAnimationOptionCurveEaseOut animations:^{
@@ -230,14 +228,15 @@ static int const margin = 15.0f;
     } completion:^(BOOL finished) {
         [self.table removeFromSuperview];
         [self.backgroundView removeFromSuperview];
-        self.selected = false;
+        //[self listSubviewsOfView:self.parentController.view];
+        self.selected = NO;
     }];
 }
 
 /* textfield delegate */
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [textField resignFirstResponder];
-    self.selected = false;
+    self.selected = NO;
     [self.backgroundView setHidden:true];
     return true;
 }
@@ -260,11 +259,21 @@ static int const margin = 15.0f;
     } else {
         [self setSearchText:[self.text substringToIndex:self.text.length-1]];
     }
-    
-    if (!self.isSelected) {
+    if (!self.selected) {
         [self hideList];
     }
-    
+    /* hide show checkmark view */
+    [self.instance convertToCoordinates:[NSString stringWithFormat:@"%@%@", textField.text, string] completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
+        if ( place.coordinates.latitude != 0 && place.coordinates.longitude != 0 ) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.checkMarkView setHidden:NO];
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.checkMarkView setHidden:YES];
+            });
+        }
+    }];
     return true;
 }
 
@@ -288,25 +297,12 @@ static int const margin = 15.0f;
     W3wSuggestion *suggestion = [self.dataArray objectAtIndex:indexPath.row];
     NSString *three_word_address = [NSString stringWithFormat:@"%@ %@", [self texthandler].text, suggestion.words];
     NSRange range = [three_word_address rangeOfString:@"///"];
-    NSDictionary *attribs = @{ NSForegroundColorAttributeName: [UIColor blackColor], NSFontAttributeName: [UIFont systemFontOfSize:12] };
+    NSDictionary *attribs = @{ };
     NSMutableAttributedString * attributedString = [[NSMutableAttributedString alloc]initWithString:three_word_address attributes:attribs];
     [attributedString setAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:206.0/255.0 green:55.0/255.0 blue:50/255.0 alpha:1.0]} range:range];
     cell.three_word_address.attributedText = attributedString;
     cell.nearest_place.text = suggestion.nearestPlace;
     cell.country_flag.image = [self countryFlagCrop: (int)[countries indexOfObject:suggestion.country.lowercaseString]];
-    
-    /* hide show checkmark view */
-    [self.instance convertToCoordinates:suggestion.words completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
-        if ( place.coordinates.latitude != 0 && place.coordinates.longitude != 0 ) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.checkMarkView setHidden:NO];
-            });
-        } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.checkMarkView setHidden:YES];
-            });
-        }
-    }];
     
     [cell setNeedsUpdateConstraints];
     [cell updateConstraintsIfNeeded];
@@ -339,7 +335,21 @@ static int const margin = 15.0f;
             [self.table reloadData];
         }];
         [self touchAction];
+        [self.table removeFromSuperview];
+        [self.backgroundView removeFromSuperview];
         [self endEditing:YES];
+    /* hide show checkmark view */
+    [self.instance convertToCoordinates:selectedText.words completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
+        if ( place.coordinates.latitude != 0 && place.coordinates.longitude != 0 ) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.checkMarkView setHidden:NO];
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.checkMarkView setHidden:YES];
+            });
+        }
+    }];
 }
 
 - (void)setSearchText:(NSString *)searchText {
@@ -350,6 +360,9 @@ static int const margin = 15.0f;
             if ([suggestions count]) {
                 for (W3wSuggestion *suggestion in suggestions) {
                     [self.dataArray addObject:suggestion];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.table reloadData];
+                    });
                 }
             }
         }];
@@ -359,7 +372,6 @@ static int const margin = 15.0f;
         [self reSizeTable];
         [self.table reloadData];
     });
-
 }
 
 // TEST: result from w3w suggestion
@@ -369,6 +381,26 @@ static int const margin = 15.0f;
     }
 }
 
+// TEST: print all subviews
+- (void)listSubviewsOfView:(UIView *)view {
+
+    // Get the subviews of the view
+    NSArray *subviews = [view subviews];
+
+    // Return if there are no subviews
+    if ([subviews count] == 0) return; // COUNT CHECK LINE
+
+    for (UIView *subview in subviews) {
+
+        // Do what you want to do with the subview
+        if ([subview isKindOfClass:[UIView class]]) {
+            NSLog(@"%@", subview.class);
+        }
+
+        // List the subviews of subview
+        [self listSubviewsOfView:subview];
+    }
+}
 - (void)setupCountries {
     countries = [[NSArray alloc]initWithObjects:@"ad", @"ae", @"af", @"ag", @"ai", @"al", @"am", @"ao", @"aq", @"ar", @"as", @"at", @"au", @"aw", @"ax", @"az", @"ba", @"bb", @"bd", @"be", @"bf", @"bg", @"bh", @"bi", @"bj", @"bl", @"bm", @"bn", @"bo", @"bq", @"br", @"bs", @"bt", @"bv", @"bw", @"by", @"bz", @"ca", @"cc", @"cd", @"cf", @"cg", @"ch", @"ci", @"ck", @"cl", @"cm", @"cn", @"co", @"cr", @"cu", @"cv", @"cw", @"cx", @"cy", @"cz", @"de", @"dj", @"dk", @"dm", @"do", @"dz", @"ec", @"ee", @"eg", @"eh", @"er", @"es", @"et", @"eu", @"fi", @"fj", @"fk", @"fm", @"fo", @"fr", @"ga", @"gb-eng", @"gb-nir", @"gb-sct", @"gb-wls", @"gb", @"gd", @"ge", @"gf", @"gg", @"gh", @"gi", @"gl", @"gm", @"gn", @"gp", @"gq", @"gr", @"gs", @"gt", @"gu", @"gw", @"gy", @"hk", @"hm", @"hn", @"hr", @"ht", @"hu", @"id", @"ie", @"il", @"im", @"in", @"io", @"iq", @"ir", @"is", @"it", @"je", @"jm", @"jo", @"jp", @"ke", @"kg", @"kh", @"ki", @"km", @"kn", @"kp", @"kr", @"kw", @"ky", @"kz", @"la", @"lb", @"lc", @"li", @"lk", @"lr", @"ls", @"lt", @"lu", @"lv", @"ly", @"ma", @"mc", @"md", @"me", @"mf", @"mg", @"mh", @"mk", @"ml", @"mm", @"mn", @"mo", @"mp", @"mq", @"mr", @"ms", @"mt", @"mu", @"mv", @"mw", @"mx", @"my", @"mz", @"na", @"nc", @"ne", @"nf", @"ng", @"ni", @"nl", @"no", @"np", @"nr", @"nu", @"nz", @"om", @"pa", @"pe", @"pf", @"pg", @"ph", @"pk", @"pl", @"pm", @"pn", @"pr", @"ps", @"pt", @"pw", @"py", @"qa", @"re", @"ro", @"rs", @"ru", @"rw", @"sa", @"sb", @"sc", @"sd", @"se", @"sg", @"sh", @"si", @"sj", @"sk", @"sl", @"sm", @"sn", @"so", @"sr", @"ss", @"st", @"sv", @"sx", @"sy", @"sz", @"tc", @"td", @"tf", @"tg", @"th", @"tj", @"tk", @"tl", @"tm", @"tn", @"to", @"tr", @"tt", @"tv", @"tw", @"tz", @"ua", @"ug", @"um", @"un", @"us", @"uy", @"uz", @"va", @"vc", @"ve", @"vg", @"vi", @"vn", @"vu", @"wf", @"ws", @"ye", @"yt", @"za", @"zm", @"zw", @"zz", nil];
 }
@@ -393,6 +425,7 @@ static int const margin = 15.0f;
         self.three_word_address.translatesAutoresizingMaskIntoConstraints = NO;
         [self.three_word_address setLineBreakMode:NSLineBreakByTruncatingTail];
         [self.three_word_address setTextAlignment:NSTextAlignmentLeft];
+        [self.nearest_place setTextColor:[UIColor blackColor]];
         // Nearest place
         self.nearest_place = [UILabel new];
         self.nearest_place.translatesAutoresizingMaskIntoConstraints = NO;
@@ -455,4 +488,3 @@ static int const margin = 15.0f;
     [self.containerView addConstraint:countryFlagHeight];
 }
 @end
-

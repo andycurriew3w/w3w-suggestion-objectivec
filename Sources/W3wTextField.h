@@ -24,3 +24,4 @@ IB_DESIGNABLE
     @property(nonatomic, strong) IBOutlet UIImageView *country_flag;
 
 @end
+

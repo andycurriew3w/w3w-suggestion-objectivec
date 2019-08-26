@@ -7,8 +7,10 @@
 //
 
 #import "ViewController.h"
+#import <W3wTextField.h>
 
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet W3wTextField *suggestion;
 
 @end
 
@@ -17,6 +19,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    [self.suggestion setAPIKey:@"4JHBSZ4A"];
+    
+
+    
 }
 
 
