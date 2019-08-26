@@ -24,6 +24,7 @@ static int const margin = 15.0f;
     NSString    *cellIdentifier;
     int         rowHeight;
     int         selectedIndex;
+    NSString    *selectedW3wText;
 
 }
 
@@ -34,6 +35,7 @@ static int const margin = 15.0f;
 @property (nonatomic, strong) W3wGeocoder *instance; //what3words geocoder
 @property (nonatomic, strong) NSMutableArray *dataArray; // W3w Suggestion array
 @property (nonatomic, strong) UIView *checkMarkView; // W3w Suggestion array
+@property (nonatomic, copy) didSelectCompletion completionBlock;
 
 @end
 
@@ -338,6 +340,7 @@ static int const margin = 15.0f;
         [self.table removeFromSuperview];
         [self.backgroundView removeFromSuperview];
         [self endEditing:YES];
+        self.completionBlock(selectedText.words);
     /* hide show checkmark view */
     [self.instance convertToCoordinates:selectedText.words completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
         if ( place.coordinates.latitude != 0 && place.coordinates.longitude != 0 ) {
@@ -352,6 +355,10 @@ static int const margin = 15.0f;
     }];
 }
 
+- (void)didSelect:(didSelectCompletion)completion
+{
+    self.completionBlock = completion; // copy semantics
+}
 - (void)setSearchText:(NSString *)searchText {
     if (![searchText isEqualToString:@""]) {
         [_instance autosuggest:searchText completion:^(NSArray *suggestions, W3wError *error)
