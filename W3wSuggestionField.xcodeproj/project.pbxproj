@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0031FCC02311F9EF00FA8A5B /* W3wTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 0031FCBE2311F9EF00FA8A5B /* W3wTextField.m */; };
-		0031FCC12311F9EF00FA8A5B /* W3wTextField.h in Headers */ = {isa = PBXBuildFile; fileRef = 0031FCBF2311F9EF00FA8A5B /* W3wTextField.h */; };
 		0031FCC32311FA0200FA8A5B /* images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0031FCC22311FA0200FA8A5B /* images.xcassets */; };
-		0031FCC62311FA9000FA8A5B /* W3wGeocoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0031FCC42311FA9000FA8A5B /* W3wGeocoder.h */; };
 		0031FCC72311FA9000FA8A5B /* W3wGeocoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0031FCC52311FA9000FA8A5B /* W3wGeocoder.m */; };
 		00D9700E22FD9E200036EDED /* W3wSuggestionField.h in Headers */ = {isa = PBXBuildFile; fileRef = 00D9700C22FD9E200036EDED /* W3wSuggestionField.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -82,8 +80,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0031FCC62311FA9000FA8A5B /* W3wGeocoder.h in Headers */,
-				0031FCC12311F9EF00FA8A5B /* W3wTextField.h in Headers */,
 				00D9700E22FD9E200036EDED /* W3wSuggestionField.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
