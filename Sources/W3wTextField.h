@@ -8,13 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
+typedef void (^didSelectCompletion)(NSString*selectedText);
+
 IB_DESIGNABLE
 @interface W3wTextField : UITextField
 
 @property(nonatomic) bool isSearchEnable;
 
 -(void)setAPIKey:(NSString *)apiKey;
-
+- (void)didSelect:(didSelectCompletion)completion;
 @end
 
 @interface SuggestionTableViewCell : UITableViewCell
