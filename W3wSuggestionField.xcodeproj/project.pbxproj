@@ -44,8 +44,9 @@
 				0031FCC52311FA9000FA8A5B /* W3wGeocoder.m */,
 				0031FCC22311FA0200FA8A5B /* images.xcassets */,
 			);
-			path = Sources;
-			sourceTree = SOURCE_ROOT;
+			name = Sources;
+			path = ../Sources;
+			sourceTree = "<group>";
 		};
 		00D96FFF22FD9E200036EDED = {
 			isa = PBXGroup;
