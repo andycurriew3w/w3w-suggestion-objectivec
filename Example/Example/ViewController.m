@@ -19,8 +19,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    [self.suggestion setAPIKey:@"4JHBSZ4A"];
-        
+    [self.suggestion setAPIKey:@"<Secret API Key>"];
+    
+
+    
 }
 
 
