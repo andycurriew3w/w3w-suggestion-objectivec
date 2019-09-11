@@ -16,16 +16,22 @@ static int const width = 64;
 static int const height = 48;
 static int const margin = 15.0f;
 
+struct Coordinates {
+    double latitude;
+    double longitude;
+};
+
 @interface W3wTextField () <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate> {
-    CGPoint     pointToParent;
-    CGFloat     listHeight;
-    CGFloat     tableHeightX;
+    CGPoint      pointToParent;
+    CGFloat      listHeight;
+    CGFloat      tableHeightX;
     NSArray     *countries;
     NSString    *cellIdentifier;
-    int         rowHeight;
-    int         selectedIndex;
+    int          rowHeight;
+    int          selectedIndex;
     NSString    *selectedW3wText;
-
+    
+    
 }
 
 @property (strong, nonatomic) UITableView *table; // DropDown Table
@@ -36,6 +42,8 @@ static int const margin = 15.0f;
 @property (nonatomic, strong) NSMutableArray *dataArray; // W3w Suggestion array
 @property (nonatomic, strong) UIView *checkMarkView; // W3w Suggestion array
 @property (nonatomic, copy) didSelectCompletion completionBlock;
+@property (nonatomic, strong) NSMutableArray   *autoSuggestionOptions;
+@property (nonatomic) BOOL    isDebugMode;
 
 @end
 
@@ -50,6 +58,7 @@ static int const margin = 15.0f;
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
+        [self setDefaultIBProperties];
         [self setupUI];
     }
     return self;
@@ -58,6 +67,7 @@ static int const margin = 15.0f;
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self) {
+        [self setDefaultIBProperties];
         [self setupUI];
         
     }
@@ -66,6 +76,115 @@ static int const margin = 15.0f;
 
 -(void)setAPIKey:(NSString *)apiKey {
     _instance = [[W3wGeocoder alloc] initWithApiKey:apiKey];
+}
+
+- (void)setDefaultIBProperties {
+    self.autoSuggestionOptions = [[NSMutableArray alloc]init];
+    // W3wSuggestionField custom UI properties
+    self.fieldCornerRadius = 0.0;
+    self.fieldBorderColor = [UIColor clearColor];
+    self.fieldBorderWidth = 0.5;
+    // W3wSuggestionField custom autosuggest properties
+    self.listHeigh = 350;
+    self.isDebugMode = true;
+}
+
+- (void)setFieldBorderColor:(UIColor *)fieldBorderColor {
+    if (fieldBorderColor != _fieldBorderColor) {
+        _fieldBorderColor = fieldBorderColor;
+        self.layer.borderColor = self.fieldBorderColor.CGColor;
+    }
+}
+
+- (void)setFieldCornerRadius:(CGFloat)fieldCornerRadius {
+    if (fieldCornerRadius != _fieldCornerRadius) {
+        _fieldCornerRadius = fieldCornerRadius;
+        self.layer.cornerRadius = self.fieldCornerRadius;
+    }
+}
+
+- (void)setFieldBorderWidth:(CGFloat)fieldBorderWidth {
+    if (fieldBorderWidth != _fieldBorderWidth) {
+        _fieldBorderWidth = fieldBorderWidth;
+        self.layer.borderWidth = self.fieldBorderWidth;
+    }
+}
+
+// set number of results to return
+- (void)setNResults:(int)nResults {
+    if (nResults != _nResults) {
+        _nResults = nResults;
+        AutoSuggestOption *nresults = [[AutoSuggestOption alloc]initAsNumberResults:self.nResults];
+        [self.autoSuggestionOptions addObject:nresults];
+    }
+}
+
+// comma separated lat/lng of point to focus on
+- (void)setAutoFocus:(NSString*)autoFocus {
+    if (autoFocus != _autoFocus) {
+        _autoFocus = autoFocus;
+        Coordinates *coordina = [[Coordinates alloc] initWithCoordinates:self.autoFocus];
+        AutoSuggestOption *focus = [[AutoSuggestOption alloc]initAsFocus:CLLocationCoordinate2DMake(coordina.latitude, coordina.longitude)];
+        [self.autoSuggestionOptions addObject:focus];
+    }
+}
+
+// set the number of results within what is returned to apply the focus to
+- (void)setnFocusResults:(int)nFocusResults {
+    if (nFocusResults != _nFocusResults) {
+        _nFocusResults = nFocusResults;
+        AutoSuggestOption *nfocusresults = [[AutoSuggestOption alloc]initAsNumberFocusResults:self.nFocusResults];
+        [self.autoSuggestionOptions addObject:nfocusresults];
+    }
+}
+
+// confine results to a given country or comma separated list of countries
+- (void)setClipToCountry:(NSString *)clipToCountry {
+    if (clipToCountry != _clipToCountry) {
+        _clipToCountry = clipToCountry;
+        AutoSuggestOption *clip = [[AutoSuggestOption alloc]initAsClipToCountry:self.clipToCountry];
+        [self.autoSuggestionOptions addObject:clip];
+    }
+}
+
+// Parse comma seperated polygon
+- (void)setClipToPolygon:(NSString *)clipToPolygon {
+    if (clipToPolygon != _clipToPolygon) {
+        _clipToPolygon = clipToPolygon;
+        Clip *coordinates = [[Clip alloc]initWithPolygon:clipToPolygon];
+        AutoSuggestOption *clipFocus = [[AutoSuggestOption alloc]initAsClipToPolygon:coordinates.polygonCoordinates];
+        [self.autoSuggestionOptions addObject:clipFocus];
+    }
+}
+
+// Parse comma seperated boundingbox
+- (void)setClipToBoundingBox:(NSString *)clipToBoundingBox {
+    if (clipToBoundingBox != _clipToBoundingBox) {
+        _clipToBoundingBox = clipToBoundingBox;
+        Clip *coordinates = [[Clip alloc]initWithBoundingBox:clipToBoundingBox];
+        AutoSuggestOption *clip = [[AutoSuggestOption alloc]initAsClipToPolygon:coordinates.boundingBoxCoordinates];
+        [self.autoSuggestionOptions addObject:clip];
+    }
+}
+
+// Parse comma seperated Circle
+- (void)setClipToCircle:(NSString *)clipToCircle {
+    if (clipToCircle != _clipToCircle) {
+        _clipToCircle = clipToCircle;
+        Clip *coords = [[Clip alloc]initWithCircle:clipToCircle];
+        CLLocation *circleLocation = coords.circleCoordinates;
+        
+        AutoSuggestOption *clip = [[AutoSuggestOption alloc]initAsClipToCircle:CLLocationCoordinate2DMake(circleLocation.coordinate.latitude, circleLocation.coordinate.longitude) radius:coords.kiloMeters];
+        [self.autoSuggestionOptions addObject:clip];
+    }
+}
+
+// set debug mode
+- (void)setDebug:(bool)debug {
+    if (debug != _debug) {
+        _debug = debug;
+        self.isDebugMode = self.debug;
+    }
 }
 
 -(void)setupUI {
@@ -89,9 +208,7 @@ static int const margin = 15.0f;
     /*textfield*/
     self.borderStyle = UITextBorderStyleNone;
     self.layer.masksToBounds = false;
-    self.layer.cornerRadius = 0.0;
     self.layer.backgroundColor = UIColor .whiteColor.CGColor;
-    self.layer.borderColor = UIColor .clearColor.CGColor;
     self.layer.shadowColor = UIColor .blackColor.CGColor;
     self.layer.shadowOffset = CGSizeMake(0, 0);
     self.layer.shadowOpacity = 0.2;
@@ -361,8 +478,14 @@ static int const margin = 15.0f;
 }
 - (void)setSearchText:(NSString *)searchText {
     if (![searchText isEqualToString:@""]) {
-        [_instance autosuggest:searchText completion:^(NSArray *suggestions, W3wError *error)
+        NSLog(@"autosuggestion options%@", self.autoSuggestionOptions);
+        [_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
         {
+            if (error) {
+            
+                self.isDebugMode ? assert(error.message) : NSLog(@"%@", error.message);
+            }
+            
             [self.dataArray removeAllObjects];
             if ([suggestions count]) {
                 for (W3wSuggestion *suggestion in suggestions) {
@@ -415,8 +538,6 @@ static int const margin = 15.0f;
 @end
 
 @implementation SuggestionTableViewCell
-
-
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
@@ -494,4 +615,99 @@ static int const margin = 15.0f;
     [self.containerView addConstraint:countryFlagWidth];
     [self.containerView addConstraint:countryFlagHeight];
 }
+@end
+
+@implementation Coordinates : NSObject { }
+@synthesize latitude;
+@synthesize longitude;
+
+-(id)initWithCoordinates:(NSString *)string {
+    if (self = [super init])
+    {
+        NSArray *crdSplit = [string componentsSeparatedByString:@","];
+        latitude = [[crdSplit firstObject] doubleValue];
+        longitude = [[crdSplit lastObject] doubleValue];
+    }
+    return self;
+}
+
+@end
+
+
+@implementation Clip : NSObject { }
+
+@synthesize coordinates;
+@synthesize kiloMeters;
+@synthesize centreCoordinates;
+
+- (id)initWithPolygon:(NSString *)string {
+    if (self = [super init])
+    {
+        coordinates = [[NSMutableArray alloc]init];
+        NSArray *crdSplit = [string componentsSeparatedByString:@","];
+        NSUInteger index = 0;
+        for(NSString *string __attribute__((unused)) in crdSplit)
+        {
+            if (index % 2 && index > 0) { //odd
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                CLLocation *location = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
+                [self.coordinates addObject:location];
+           }
+           index ++;
+        }
+    }
+    return self;
+}
+
+- (id)initWithBoundingBox:(NSString *)string {
+    if (self = [super init])
+    {
+        coordinates = [[NSMutableArray alloc]init];
+        NSArray *crdSplit = [string componentsSeparatedByString:@","];
+        NSUInteger index = 0;
+        for(NSString *string __attribute__((unused)) in crdSplit)
+        {
+            if (index % 2 && index > 0) { //odd
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                CLLocation *location = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
+                [self.coordinates addObject:location];
+           }
+           index ++;
+        }
+    }
+    return self;
+}
+
+- (id)initWithCircle:(NSString *)string {
+    if (self = [super init])
+    {
+        centreCoordinates = [[CLLocation alloc]init];
+        NSArray *crdSplit = [string componentsSeparatedByString:@","];
+        kiloMeters = [[crdSplit lastObject] doubleValue];
+        NSUInteger index = 0;
+        for(NSString *string __attribute__((unused)) in crdSplit)
+        {
+            if (index > 0) { //odd
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                centreCoordinates = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
+                break;
+           }
+           index ++;
+        }
+    }
+    return self;
+}
+
+- (NSMutableArray *)polygonCoordinates {
+    return self.coordinates;
+}
+
+-(NSMutableArray *)boundingBoxCoordinates {
+    return coordinates;
+}
+
+-(CLLocation *)circleCoordinates {
+    return centreCoordinates;
+}
+
 @end
