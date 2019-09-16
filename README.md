@@ -56,7 +56,7 @@ Now, open Main.storyboard and drag a `UITextfield` to the screen from the Object
 
 From the Connections Inspector (last tab on the right sidebar), click and drag the open circle next to `suggestionField ` to newly created `UITextfield` in the storyboard.
 
-Initialise the API by,
+Initialize the API by placing the following code into the `viewDidLoad` method
 
 ```objective-c
 [self.suggestion setAPIKey:@"<Secret API Key>"];
