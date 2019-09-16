@@ -46,7 +46,7 @@ If you used the framework via a package manager then use the following:
 Note: If you skipped the framework and manually dragged and dropped the`W3wGeocoder.h,  W3wGeocoder.m` & `W3wtextfield.h, W3wtextfield.m ` then you don't need use the import statement.
 
 ### Step 2:
-Select `ViewController.h` and add the following code after `viewDidLoad()`:
+Select `ViewController.h` and add the following code to the class:
 
 ```objective-c
 @property (weak, nonatomic) IBOutlet W3wTextField *suggestion;
