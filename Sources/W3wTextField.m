@@ -374,7 +374,9 @@ struct Coordinates {
     [self.backgroundView setHidden:false];
     
     if (![string  isEqual: @""]) {
-        [self setSearchText:[NSString stringWithFormat:@"%@%@", textField.text, string]];
+        NSString *trimSpace = [textField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        [self setSearchText:[NSString stringWithFormat:@"%@%@", trimSpace, string]];
+        
     } else {
         [self setSearchText:[self.text substringToIndex:self.text.length-1]];
     }
