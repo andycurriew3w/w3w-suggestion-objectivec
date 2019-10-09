@@ -69,7 +69,7 @@ To use this library you’ll need a what3words API key, which can be signed up f
 
 ### Step 3:
 
-To get selected three word address from dropdown menu, 
+To get selected three word address from dropdown menu, add the following code to the `ViewController.h` class
 
 ```objective-c
  [self.suggestion didSelect:^(NSString *selectedText) {
