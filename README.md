@@ -49,7 +49,7 @@ Note: If you skipped the framework and manually dragged and dropped the`W3wGeoco
 Select `ViewController.h` and add the following code to the class:
 
 ```objective-c
-@property (weak, nonatomic) IBOutlet W3wTextField *suggestion;
+@property (weak, nonatomic) IBOutlet W3wTextField *suggestionField;
 ```
 
 Now, open Main.storyboard and drag a `UITextfield` to the screen from the Object library. In the Identity Inspector change the custom class to `W3wTextField`.The last thing to do is to connect the action to the button. Click the yellow View Controller icon in the View Controller scene. 
@@ -59,7 +59,7 @@ From the Connections Inspector (last tab on the right sidebar), click and drag t
 Initialize the API by placing the following code into the `viewDidLoad` method
 
 ```objective-c
-[self.suggestion setAPIKey:@"<Secret API Key>"];
+[self.suggestionField setAPIKey:@"<Secret API Key>"];
 ```
 
 #### Authentication
@@ -72,7 +72,7 @@ To use this library you’ll need a what3words API key, which can be signed up f
 To get selected three word address from dropdown menu, add the following code to the `ViewController.h` class
 
 ```objective-c
- [self.suggestion didSelect:^(NSString *selectedText) {
+ [self.suggestionField didSelect:^(NSString *selectedText) {
     NSLog(@"Three word address: %@", selectedText);
   }];
 ```
