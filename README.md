@@ -52,9 +52,7 @@ Select `ViewController.h` and add the following code to the class:
 @property (weak, nonatomic) IBOutlet W3wTextField *suggestionField;
 ```
 
-Now, open Main.storyboard and drag a `UITextfield` to the screen from the Object library. In the Identity Inspector change the custom class to `W3wTextField`.The last thing to do is to connect the action to the button. Click the yellow View Controller icon in the View Controller scene. 
-
-From the Connections Inspector (last tab on the right sidebar), click and drag the open circle next to `suggestionField ` to newly created `UITextfield` in the storyboard.
+Now, open Main.storyboard and drag a `UITextfield` to the screen from the Object library. In the Identity Inspector change the custom class to `W3wTextField`.The last thing to do is to connect the action to the button. Click the yellow View Controller icon in the View Controller scene. From the Connections Inspector (last tab on the right sidebar), click and drag the open circle next to `suggestionField ` to newly created `UITextfield` in the storyboard.
 
 Initialize the API by placing the following code into the `viewDidLoad` method
 
