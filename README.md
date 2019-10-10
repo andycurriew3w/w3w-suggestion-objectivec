@@ -37,14 +37,14 @@ Fire up Xcode and create a new `Single View App` project with `objective-c` as a
 
 ### Step 1:
 
-Add the following header to `viewcontroller.h` class:
+Add the following header to `viewcontroller.m` class:
 
 ```objectivec
 #import <W3wTextField.h>
 ```
 
 ### Step 2:
-Select `ViewController.h` and add the following code to the class:
+Select `ViewController.m` and add the following code to the class:
 
 ```objective-c
 @property (weak, nonatomic) IBOutlet W3wTextField *suggestionField;
