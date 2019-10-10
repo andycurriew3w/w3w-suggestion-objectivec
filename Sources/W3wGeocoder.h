@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define API_URL @"https://api.what3words.com/v3/"
 
 enum Format { JSON, GEOJSON };
-enum InputType { VOCONHYBRID, NMDPASR };
+enum InputType { VOCONHYBRID, NMDPASR, GENERIC_VOICE };
 
 
 @interface W3wError : NSObject { }
@@ -72,6 +72,7 @@ enum InputType { VOCONHYBRID, NMDPASR };
 +(AutoSuggestOption *)clipToCircle:(CLLocationCoordinate2D)centre radius:(double)kilometers;
 +(AutoSuggestOption *)clipToBoundingBox:(float)south_lat west_lng:(float)west_lng north_lat:(float)north_lat east_lng:(float)east_lng;
 +(AutoSuggestOption *)clipToPolygon:(NSArray *)polygon;
++(AutoSuggestOption *)preferLand:(BOOL)land;
 
 -(id)initAsFallbackLanguage:(NSString *)language;
 -(id)initAsNumberResults:(int)number_results;
@@ -81,6 +82,7 @@ enum InputType { VOCONHYBRID, NMDPASR };
 -(id)initAsClipToCountry:(NSString *)country;
 -(id)initAsClipToCircle:(CLLocationCoordinate2D)centre radius:(double)kilometers;
 -(id)initAsClipToPolygon:(NSArray *)polygon;
+-(id)initAsBoundingBox:(float)south_lat west_lng:(float)west_lng north_lat:(float)north_lat east_lng:(float)east_lng;
 
 @end
 
@@ -88,6 +90,8 @@ enum InputType { VOCONHYBRID, NMDPASR };
 @interface W3wGeocoder : NSObject {
   NSString *apiUrl;
   NSString *apiKey;
+  NSString *versionHeader;
+  NSString *bundleHeader;
 }
 
 -(id)initWithApiKey:(NSString *)key;
@@ -112,6 +116,8 @@ enum InputType { VOCONHYBRID, NMDPASR };
 +(NSString *)stringForInputType:(enum InputType)input_type;
 
 -(void)performRequest:(NSString *)path params:(NSDictionary *)params completion:(void (^)(NSDictionary *result, W3wError *error))completion;
+
+-(void)figureOutVersions;
 @end
 
 
