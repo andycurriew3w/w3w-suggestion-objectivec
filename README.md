@@ -37,7 +37,7 @@ Fire up Xcode and create a new `Single View App` project with `objective-c` as a
 
 ### Step 1:
 
-If you used the framework via a package manager then use the following:
+Add the following header to `viewcontroller.h` class:
 
 ```objectivec
 #import <W3wTextField.h>
