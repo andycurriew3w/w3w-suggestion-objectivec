@@ -162,7 +162,9 @@ struct Coordinates {
     if (clipToBoundingBox != _clipToBoundingBox) {
         _clipToBoundingBox = clipToBoundingBox;
         Clip *coordinates = [[Clip alloc]initWithBoundingBox:clipToBoundingBox];
-        AutoSuggestOption *clip = [[AutoSuggestOption alloc]initAsClipToPolygon:coordinates.boundingBoxCoordinates];
+        CLLocation *sw = coordinates.coordinates.firstObject;
+        CLLocation *ne = coordinates.coordinates.lastObject;
+        AutoSuggestOption *clip = [[AutoSuggestOption alloc]initAsBoundingBox:sw.coordinate.latitude west_lng:sw.coordinate.longitude north_lat:ne.coordinate.latitude east_lng:ne.coordinate.longitude];
         [self.autoSuggestionOptions addObject:clip];
     }
 }
@@ -447,6 +449,8 @@ struct Coordinates {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
         selectedIndex = (int) indexPath.row;
         W3wSuggestion *selectedText = [self.dataArray objectAtIndex:selectedIndex];
+        NSString *w3w = selectedText.words;
+        self.completionBlock(w3w);
         [tableView cellForRowAtIndexPath:indexPath].alpha = 0;
         [UIView animateWithDuration:0.5 animations:^{
             [tableView cellForRowAtIndexPath:indexPath].alpha = 1.0;
@@ -459,7 +463,6 @@ struct Coordinates {
         [self.table removeFromSuperview];
         [self.backgroundView removeFromSuperview];
         [self endEditing:YES];
-        self.completionBlock(selectedText.words);
     /* hide show checkmark view */
     [self.instance convertToCoordinates:selectedText.words completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
         if ( place.coordinates.latitude != 0 && place.coordinates.longitude != 0 ) {
@@ -478,13 +481,12 @@ struct Coordinates {
 {
     self.completionBlock = completion; // copy semantics
 }
+
 - (void)setSearchText:(NSString *)searchText {
     if (![searchText isEqualToString:@""]) {
-        NSLog(@"autosuggestion options%@", self.autoSuggestionOptions);
         [_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
         {
             if (error) {
-            
                 self.isDebugMode ? assert(error.message) : NSLog(@"%@", error.message);
             }
             
@@ -651,7 +653,7 @@ struct Coordinates {
         for(NSString *string __attribute__((unused)) in crdSplit)
         {
             if (index % 2 && index > 0) { //odd
-                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index-1], [crdSplit objectAtIndex:index]]];
                 CLLocation *location = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
                 [self.coordinates addObject:location];
            }
@@ -670,7 +672,7 @@ struct Coordinates {
         for(NSString *string __attribute__((unused)) in crdSplit)
         {
             if (index % 2 && index > 0) { //odd
-                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index-1], [crdSplit objectAtIndex:index]]];
                 CLLocation *location = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
                 [self.coordinates addObject:location];
            }
@@ -690,7 +692,7 @@ struct Coordinates {
         for(NSString *string __attribute__((unused)) in crdSplit)
         {
             if (index > 0) { //odd
-                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index], [crdSplit objectAtIndex:index-1]]];
+                Coordinates *coordinate = [[Coordinates alloc]initWithCoordinates:[NSString stringWithFormat:@"%@,%@", [crdSplit objectAtIndex:index-1], [crdSplit objectAtIndex:index]]];
                 centreCoordinates = [[CLLocation alloc] initWithLatitude:coordinate.latitude longitude:coordinate.longitude];
                 break;
            }
