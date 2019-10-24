@@ -9,6 +9,8 @@
 #import "W3wGeocoder.h"
 #import <CoreLocation/CoreLocation.h>
 
+#define COLOR_RGBA(r, g, b, a) [UIColor colorWithRed:r / 255.0f green:g / 255.0f blue:b / 255.0f alpha:a]
+
 static NSString *CellIdentifier = @"CellIdentifier";
 static int rows = 16;
 static int const cols = 16;
@@ -20,6 +22,23 @@ struct Coordinates {
     double latitude;
     double longitude;
 };
+
+
+@implementation UIColor (UIColor_Constants)
++(UIColor *) W3wTextColor {
+    return [UIColor colorWithRed:0.04f green:0.19f blue:0.29f alpha:1.0f];
+}
+
++(UIColor *) w3wLocationColor {
+    return [UIColor colorWithRed:0.64f green:0.64f blue:0.64f alpha:1.0f];
+}
+
++(UIColor *) w3wLogoColor {
+    return [UIColor colorWithRed:0.88f green:0.12f blue:0.15f alpha:1.0f];
+}
+
+@end
+
 
 @interface W3wTextField () <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate> {
     CGPoint      pointToParent;
@@ -196,11 +215,11 @@ struct Coordinates {
     tableHeightX = 350.0;
     cellIdentifier  = @"DropDownCell";
     selectedIndex = 0;
-    rowHeight = 78;
+    rowHeight = 72;
     
     [self setupCountries];
     
-    self.backgroundView = [[UIView alloc]init];
+    self.backgroundView = [[UIView alloc] init];
     self.backgroundView.backgroundColor = UIColor .clearColor;
     
     self.delegate = self;
@@ -208,15 +227,18 @@ struct Coordinates {
     self.dataArray = [NSMutableArray array]; // initialise dataarray
     
     /*textfield*/
+    self.placeholder = @"e.g. lock.spout.radar";
     self.borderStyle = UITextBorderStyleNone;
     self.layer.masksToBounds = false;
     self.layer.backgroundColor = UIColor .whiteColor.CGColor;
     self.layer.shadowColor = UIColor .blackColor.CGColor;
     self.layer.shadowOffset = CGSizeMake(0, 0);
     self.layer.shadowOpacity = 0.2;
-    self.layer.shadowRadius = 4.0;
+    self.layer.shadowRadius = 2.0;
     self.layer.sublayerTransform = CATransform3DMakeTranslation(15.0, 0.0, 0.0);
     self.keyboardType = UIKeyboardTypeEmailAddress;
+    self.font = [UIFont systemFontOfSize:20.0f];
+    self.textColor = [UIColor W3wTextColor];
     /* set up the text handler */
     self.leftView = [self texthandler];
     self.leftViewMode = UITextFieldViewModeAlways;
@@ -239,8 +261,8 @@ struct Coordinates {
 
 - (UILabel *)texthandler {
     UILabel * textHandler = [[UILabel alloc]initWithFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, 23, self.frame.size.height)];
-    textHandler.text = @"/// ";
-    textHandler.textColor = [UIColor colorWithRed:206.0/255.0 green:55.0/255.0 blue:50/255.0 alpha:1.0];
+    textHandler.text = @"///";
+    textHandler.textColor = [UIColor w3wLogoColor];
     textHandler.contentMode = UIViewContentModeScaleAspectFit;
     textHandler.font = [UIFont fontWithName:textHandler.font.fontName size:23];
     return textHandler;
@@ -547,26 +569,33 @@ struct Coordinates {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         // set up cell
-        self.layer.borderColor = [UIColor colorWithRed:110.0/255.0 green:110.0/255.0 blue:110.0/255.0 alpha:1.0].CGColor;
+        self.layer.borderColor = [UIColor colorWithRed:229.0/255.0 green:229.0/255.0 blue:229.0/255.0 alpha:1.0].CGColor;
         self.layer.borderWidth = 0.5;
+   
         // Container view
         self.containerView = [UIView new];
         self.containerView.translatesAutoresizingMaskIntoConstraints = NO;
-        self.three_word_address = [UILabel new];
         // Three word address label
+        self.three_word_address = [UILabel new];
         self.three_word_address.translatesAutoresizingMaskIntoConstraints = NO;
         [self.three_word_address setLineBreakMode:NSLineBreakByTruncatingTail];
         [self.three_word_address setTextAlignment:NSTextAlignmentLeft];
-        [self.nearest_place setTextColor:[UIColor blackColor]];
+        self.three_word_address.textColor = [UIColor W3wTextColor];
+        self.three_word_address.font = [UIFont systemFontOfSize:20.0f];
         // Nearest place
+        [self.nearest_place setTextColor:[UIColor blackColor]];
         self.nearest_place = [UILabel new];
         self.nearest_place.translatesAutoresizingMaskIntoConstraints = NO;
         [self.nearest_place setLineBreakMode:NSLineBreakByTruncatingTail];
         [self.nearest_place setTextAlignment:NSTextAlignmentLeft];
         [self.nearest_place setTextColor:[UIColor blackColor]];
+        self.nearest_place.textColor = [UIColor w3wLocationColor];
+        self.nearest_place.font = [UIFont systemFontOfSize:12.0f];
+
         // country flag
         self.country_flag = [UIImageView new];
         self.country_flag.translatesAutoresizingMaskIntoConstraints = NO;
+        
         // Set up views, labels
         [self.containerView addSubview:self.three_word_address];
         [self.containerView addSubview:self.nearest_place];
@@ -596,7 +625,7 @@ struct Coordinates {
     
     NSLayoutConstraint *threeWordAddressHeight = [NSLayoutConstraint constraintWithItem:self.three_word_address attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:self.containerView attribute:NSLayoutAttributeHeight multiplier:0.5f constant:0.0f]; //Height
    // Nearest place
-    NSLayoutConstraint *nearestPlaceTop = [NSLayoutConstraint constraintWithItem:self.nearest_place attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.three_word_address attribute:NSLayoutAttributeBottom multiplier:1.0f constant:0.0f]; //Top
+    NSLayoutConstraint *nearestPlaceTop = [NSLayoutConstraint constraintWithItem:self.nearest_place attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.three_word_address attribute:NSLayoutAttributeBottom multiplier:1.3f constant:0.0f]; //Top
     NSLayoutConstraint *nearestPlaceLeading = [NSLayoutConstraint constraintWithItem:self.nearest_place attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.country_flag attribute:NSLayoutAttributeTrailing multiplier:1.0f constant:5.0f]; //Leading
     // Flags
     NSLayoutConstraint *countryFlagLeading = [NSLayoutConstraint constraintWithItem:self.country_flag attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:self.three_word_address attribute:NSLayoutAttributeLeading multiplier:1.0f constant:0.0f]; //Leading
