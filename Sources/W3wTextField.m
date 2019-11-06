@@ -9,8 +9,6 @@
 #import "W3wGeocoder.h"
 #import <CoreLocation/CoreLocation.h>
 
-#define COLOR_RGBA(r, g, b, a) [UIColor colorWithRed:r / 255.0f green:g / 255.0f blue:b / 255.0f alpha:a]
-
 static NSString *CellIdentifier = @"CellIdentifier";
 static int rows = 16;
 static int const cols = 16;
@@ -63,6 +61,7 @@ struct Coordinates {
 @property (nonatomic, copy) didSelectCompletion completionBlock;
 @property (nonatomic, strong) NSMutableArray   *autoSuggestionOptions;
 @property (nonatomic) BOOL    isDebugMode;
+@property(strong) dispatch_source_t debounceTimer;
 
 @end
 
@@ -72,7 +71,7 @@ struct Coordinates {
 
 - (void)drawRect:(CGRect)rect
 {
-    [self setupUI];
+    //[self setupUI];
 }
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -224,7 +223,7 @@ struct Coordinates {
     
     self.delegate = self;
     isSearchEnable = true;
-    self.dataArray = [NSMutableArray array]; // initialise dataarray
+    self.dataArray = [NSMutableArray array]; // initialise
     
     /*textfield*/
     self.placeholder = @"e.g. lock.spout.radar";
@@ -370,7 +369,9 @@ struct Coordinates {
         self.table.frame = CGRectMake(self->pointToParent.x, self->pointToParent.y+self.frame.size.height, self.frame.size.width, 0);
     } completion:^(BOOL finished) {
         [self.table removeFromSuperview];
-        [self.backgroundView removeFromSuperview];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.backgroundView removeFromSuperview];
+        });
         //[self listSubviewsOfView:self.parentController.view];
         self.selected = NO;
     }];
@@ -378,14 +379,15 @@ struct Coordinates {
 
 /* textfield delegate */
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    //[self touchAction];
     [textField resignFirstResponder];
-    self.selected = NO;
-    [self.backgroundView setHidden:true];
+    //self.selected = NO;
+    //[self.backgroundView setHidden:true];
     return true;
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
-    [self.dataArray removeAllObjects];
+    ///[self.dataArray removeAllObjects];
     [self touchAction];
 }
 
@@ -439,18 +441,19 @@ struct Coordinates {
         cell = [[SuggestionTableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:cellIdentifier];
     }
     
+    NSLog(@"dataarray:%lu",(unsigned long)self.dataArray.count);
     W3wSuggestion *suggestion = [self.dataArray objectAtIndex:indexPath.row];
-    NSString *three_word_address = [NSString stringWithFormat:@"%@ %@", [self texthandler].text, suggestion.words];
-    NSRange range = [three_word_address rangeOfString:@"///"];
-    NSDictionary *attribs = @{ };
-    NSMutableAttributedString * attributedString = [[NSMutableAttributedString alloc]initWithString:three_word_address attributes:attribs];
-    [attributedString setAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:206.0/255.0 green:55.0/255.0 blue:50/255.0 alpha:1.0]} range:range];
-    cell.three_word_address.attributedText = attributedString;
-    cell.nearest_place.text = suggestion.nearestPlace;
-    cell.country_flag.image = [self countryFlagCrop: (int)[countries indexOfObject:suggestion.country.lowercaseString]];
-    
-    [cell setNeedsUpdateConstraints];
-    [cell updateConstraintsIfNeeded];
+        NSString *three_word_address = [NSString stringWithFormat:@"%@ %@", [self texthandler].text, suggestion.words];
+        NSRange range = [three_word_address rangeOfString:@"///"];
+        NSDictionary *attribs = @{ };
+        NSMutableAttributedString * attributedString = [[NSMutableAttributedString alloc]initWithString:three_word_address attributes:attribs];
+        [attributedString setAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:206.0/255.0 green:55.0/255.0 blue:50/255.0 alpha:1.0]} range:range];
+        cell.three_word_address.text = [NSString stringWithFormat:@"///%@", suggestion.words];
+        cell.nearest_place.text = suggestion.nearestPlace;
+        cell.country_flag.image = [self countryFlagCrop: (int)[countries indexOfObject:suggestion.country.lowercaseString]];
+
+        [cell setNeedsUpdateConstraints];
+        [cell updateConstraintsIfNeeded];
     return cell;
 }
 
@@ -483,7 +486,7 @@ struct Coordinates {
         }];
         [self touchAction];
         [self.table removeFromSuperview];
-        [self.backgroundView removeFromSuperview];
+        //[self.backgroundView removeFromSuperview];
         [self endEditing:YES];
     /* hide show checkmark view */
     [self.instance convertToCoordinates:selectedText.words completion:^(W3wPlace * _Nonnull place, W3wError * _Nonnull error) {
@@ -505,29 +508,44 @@ struct Coordinates {
 }
 
 - (void)setSearchText:(NSString *)searchText {
-    if (![searchText isEqualToString:@""]) {
-        [_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
-        {
-            if (error) {
-                self.isDebugMode ? assert(error.message) : NSLog(@"%@", error.message);
-            }
-            
-            [self.dataArray removeAllObjects];
-            if ([suggestions count]) {
+    
+    if (self.debounceTimer != nil) {
+        dispatch_source_cancel(self.debounceTimer);
+        self.debounceTimer = nil;
+    }
+    
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    double secondsToThrottle = 0.3f;
+    self.debounceTimer = CreateDebounceDispatchTimer(secondsToThrottle, queue, ^{
+        if (![searchText isEqualToString:@""]) {
+            [self->_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
+            {
+                if (error) {
+                    self.isDebugMode ? assert(error.message) : NSLog(@"%@", error.message);
+                }
+                
+                if ([suggestions count]) {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                    [self.dataArray removeAllObjects];
+                });
                 for (W3wSuggestion *suggestion in suggestions) {
                     [self.dataArray addObject:suggestion];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.table reloadData];
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        if ((self.dataArray.count) > 0) {
+                             [self.table reloadData];
+                        }
                     });
                 }
-            }
-        }];
-    }
-    selectedIndex = 0;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self reSizeTable];
-        [self.table reloadData];
+                [self.table reloadData];
+                }
+            }];
+        }
     });
+
+    selectedIndex = 0;
+    [self reSizeTable];
+    //[self.table reloadData];
 }
 
 // TEST: result from w3w suggestion
@@ -559,6 +577,19 @@ struct Coordinates {
 }
 - (void)setupCountries {
     countries = [[NSArray alloc]initWithObjects:@"ad", @"ae", @"af", @"ag", @"ai", @"al", @"am", @"ao", @"aq", @"ar", @"as", @"at", @"au", @"aw", @"ax", @"az", @"ba", @"bb", @"bd", @"be", @"bf", @"bg", @"bh", @"bi", @"bj", @"bl", @"bm", @"bn", @"bo", @"bq", @"br", @"bs", @"bt", @"bv", @"bw", @"by", @"bz", @"ca", @"cc", @"cd", @"cf", @"cg", @"ch", @"ci", @"ck", @"cl", @"cm", @"cn", @"co", @"cr", @"cu", @"cv", @"cw", @"cx", @"cy", @"cz", @"de", @"dj", @"dk", @"dm", @"do", @"dz", @"ec", @"ee", @"eg", @"eh", @"er", @"es", @"et", @"eu", @"fi", @"fj", @"fk", @"fm", @"fo", @"fr", @"ga", @"gb-eng", @"gb-nir", @"gb-sct", @"gb-wls", @"gb", @"gd", @"ge", @"gf", @"gg", @"gh", @"gi", @"gl", @"gm", @"gn", @"gp", @"gq", @"gr", @"gs", @"gt", @"gu", @"gw", @"gy", @"hk", @"hm", @"hn", @"hr", @"ht", @"hu", @"id", @"ie", @"il", @"im", @"in", @"io", @"iq", @"ir", @"is", @"it", @"je", @"jm", @"jo", @"jp", @"ke", @"kg", @"kh", @"ki", @"km", @"kn", @"kp", @"kr", @"kw", @"ky", @"kz", @"la", @"lb", @"lc", @"li", @"lk", @"lr", @"ls", @"lt", @"lu", @"lv", @"ly", @"ma", @"mc", @"md", @"me", @"mf", @"mg", @"mh", @"mk", @"ml", @"mm", @"mn", @"mo", @"mp", @"mq", @"mr", @"ms", @"mt", @"mu", @"mv", @"mw", @"mx", @"my", @"mz", @"na", @"nc", @"ne", @"nf", @"ng", @"ni", @"nl", @"no", @"np", @"nr", @"nu", @"nz", @"om", @"pa", @"pe", @"pf", @"pg", @"ph", @"pk", @"pl", @"pm", @"pn", @"pr", @"ps", @"pt", @"pw", @"py", @"qa", @"re", @"ro", @"rs", @"ru", @"rw", @"sa", @"sb", @"sc", @"sd", @"se", @"sg", @"sh", @"si", @"sj", @"sk", @"sl", @"sm", @"sn", @"so", @"sr", @"ss", @"st", @"sv", @"sx", @"sy", @"sz", @"tc", @"td", @"tf", @"tg", @"th", @"tj", @"tk", @"tl", @"tm", @"tn", @"to", @"tr", @"tt", @"tv", @"tw", @"tz", @"ua", @"ug", @"um", @"un", @"us", @"uy", @"uz", @"va", @"vc", @"ve", @"vg", @"vi", @"vn", @"vu", @"wf", @"ws", @"ye", @"yt", @"za", @"zm", @"zw", @"zz", nil];
+}
+
+
+dispatch_source_t CreateDebounceDispatchTimer(double debounceTime, dispatch_queue_t queue, dispatch_block_t block) {
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+    
+    if (timer) {
+        dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, debounceTime * NSEC_PER_SEC), DISPATCH_TIME_FOREVER, (1ull * NSEC_PER_SEC) / 10);
+        dispatch_source_set_event_handler(timer, block);
+        dispatch_resume(timer);
+    }
+    
+    return timer;
 }
 
 @end
