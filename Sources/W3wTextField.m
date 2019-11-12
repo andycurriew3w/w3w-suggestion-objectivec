@@ -208,7 +208,7 @@ struct Coordinates {
 }
 
 -(void)setupUI {
-
+    //
     //initial value poin to parent
     listHeight = 350.0;
     tableHeightX = 350.0;
@@ -441,7 +441,6 @@ struct Coordinates {
         cell = [[SuggestionTableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:cellIdentifier];
     }
     
-    NSLog(@"dataarray:%lu",(unsigned long)self.dataArray.count);
     W3wSuggestion *suggestion = [self.dataArray objectAtIndex:indexPath.row];
         NSString *three_word_address = [NSString stringWithFormat:@"%@ %@", [self texthandler].text, suggestion.words];
         NSRange range = [three_word_address rangeOfString:@"///"];
@@ -475,7 +474,10 @@ struct Coordinates {
         selectedIndex = (int) indexPath.row;
         W3wSuggestion *selectedText = [self.dataArray objectAtIndex:selectedIndex];
         NSString *w3w = selectedText.words;
-        self.completionBlock(w3w);
+        if (self.completionBlock != NULL) {
+            self.completionBlock(w3w);
+        }
+        
         [tableView cellForRowAtIndexPath:indexPath].alpha = 0;
         [UIView animateWithDuration:0.5 animations:^{
             [tableView cellForRowAtIndexPath:indexPath].alpha = 1.0;
@@ -516,7 +518,7 @@ struct Coordinates {
     
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
-    double secondsToThrottle = 0.3f;
+    double secondsToThrottle = 0.2f;
     self.debounceTimer = CreateDebounceDispatchTimer(secondsToThrottle, queue, ^{
         if (![searchText isEqualToString:@""]) {
             [self->_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
@@ -570,7 +572,7 @@ struct Coordinates {
 
         // Do what you want to do with the subview
         if ([subview isKindOfClass:[UIView class]]) {
-            NSLog(@"%@", subview.class);
+            //NSLog(@"%@", subview.class);
         }
 
         // List the subviews of subview
