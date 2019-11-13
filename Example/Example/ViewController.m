@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import <W3wTextField.h>
+#import "W3wTextField.h"
 
 @interface ViewController ()
 @property (weak, nonatomic) IBOutlet W3wTextField *suggestion;
@@ -21,7 +21,9 @@
     // Do any additional setup after loading the view.
     [self.suggestion setAPIKey:@"<Secret API Key>"];
     
-
+    [self.suggestion didSelect:^(NSString *selectedText) {
+      NSLog(@"Three word address: %@", selectedText);
+    }];
     
 }
 
