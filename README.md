@@ -20,7 +20,7 @@ This repository contains an Xcode project that builds a framework, and tests for
 You can use [CocoaPods](http://cocoapods.org/) to install `w3w-objectivec-wrapper`by adding it to your `Podfile`:
 
 ```ruby
-platform :ios, '9.0'
+platform :ios, '10.0'
 use_frameworks!
 
 target 'MyApp' do
