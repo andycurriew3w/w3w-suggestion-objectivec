@@ -524,7 +524,7 @@ struct Coordinates {
             [self->_instance autosuggest:searchText parameters:self.autoSuggestionOptions completion:^(NSArray *suggestions, W3wError *error)
             {
                 if (error) {
-                    self.isDebugMode ? assert(error.message) : NSLog(@"%@", error.message);
+                  NSLog(@"%@", error.message);
                 }
                 
                 if ([suggestions count]) {
