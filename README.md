@@ -1,4 +1,4 @@
-# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-objective-c-autosuggest
+# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-autosuggest-objective-c
 
 A objective-c library to use What3words autosuggest
 
@@ -24,7 +24,7 @@ platform :ios, '10.0'
 use_frameworks!
 
 target 'MyApp' do
-    pod 'W3wSuggestionField', :git => 'https://github.com/selvaw3w/w3w-suggestion-objectivec.git'
+    pod 'W3wSuggestionField', :git => 'https://github.com/what3words/w3w-autosuggest-textfield-objectivec.git'
 end
 ```
 
