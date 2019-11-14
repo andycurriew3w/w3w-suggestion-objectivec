@@ -1,4 +1,4 @@
-# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-autosuggest-objective-c
+# <img valign='top' src="https://what3words.com/assets/images/w3w_square_red.png" width="64" height="64" alt="what3words">&nbsp;w3w-autosuggest-textfield-objective-c
 
 A objective-c library to use What3words autosuggest
 
